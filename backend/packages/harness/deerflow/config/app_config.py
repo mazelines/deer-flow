@@ -41,6 +41,10 @@ CONFIG_FILE_DATABASE_DEFAULTS = {
     "sqlite_dir": ".deer-flow/data",
 }
 
+MODEL_NAME_ALIASES = {
+    "glm-5turbo": "glm-5-turbo",
+}
+
 
 class CircuitBreakerConfig(BaseModel):
     """Configuration for the LLM Circuit Breaker."""
@@ -299,7 +303,13 @@ class AppConfig(BaseModel):
         Returns:
             The model config if found, otherwise None.
         """
-        return next((model for model in self.models if model.name == name), None)
+        model = next((model for model in self.models if model.name == name), None)
+        if model is not None:
+            return model
+        alias = MODEL_NAME_ALIASES.get(name)
+        if alias is None:
+            return None
+        return next((model for model in self.models if model.name == alias), None)
 
     def get_tool_config(self, name: str) -> ToolConfig | None:
         """Get the tool config by name.

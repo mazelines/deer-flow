@@ -130,6 +130,21 @@ def test_resolve_model_name_falls_back_to_default(monkeypatch, caplog):
     assert "fallback to default model 'default-model'" in caplog.text
 
 
+def test_resolve_model_name_accepts_glm_5_turbo_alias(monkeypatch):
+    app_config = _make_app_config(
+        [
+            _make_model("glm-4-7", supports_thinking=True),
+            _make_model("glm-5-turbo", supports_thinking=True),
+        ]
+    )
+
+    monkeypatch.setattr(lead_agent_module, "get_app_config", lambda: app_config)
+
+    resolved = lead_agent_module._resolve_model_name("glm-5turbo")
+
+    assert resolved == "glm-5-turbo"
+
+
 def test_resolve_model_name_uses_default_when_none(monkeypatch):
     app_config = _make_app_config(
         [

@@ -42,8 +42,8 @@ def _resolve_model_name(requested_model_name: str | None = None, *, app_config: 
     if default_model_name is None:
         raise ValueError("No chat models are configured. Please configure at least one model in config.yaml.")
 
-    if requested_model_name and app_config.get_model_config(requested_model_name):
-        return requested_model_name
+    if requested_model_name and (model_config := app_config.get_model_config(requested_model_name)):
+        return model_config.name
 
     if requested_model_name and requested_model_name != default_model_name:
         logger.warning(f"Model '{requested_model_name}' not found in config; fallback to default model '{default_model_name}'.")
