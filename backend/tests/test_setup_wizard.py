@@ -58,6 +58,11 @@ class TestProviders:
         free = [provider for provider in WEB_FETCH_PROVIDERS if provider.env_var is None]
         assert free, "Expected at least one free (no-key) web fetch provider"
 
+    def test_z_ai_provider_defaults_to_glm_4_7(self):
+        provider = next(p for p in LLM_PROVIDERS if p.name == "z_ai")
+        assert provider.default_model == "glm-4.7"
+        assert provider.models == ["glm-4.7", "glm-5.1", "glm-5-turbo"]
+
 
 class TestBuildMinimalConfig:
     def test_produces_valid_yaml(self):
@@ -128,6 +133,42 @@ class TestBuildMinimalConfig:
         assert model["max_retries"] == 2
         assert model["max_tokens"] == 8192
         assert model["temperature"] == 0.7
+
+    def test_z_ai_defaults_are_preserved(self):
+        provider = next(p for p in LLM_PROVIDERS if p.name == "z_ai")
+        content = build_minimal_config(
+            provider_use=provider.use,
+            model_name=provider.default_model,
+            display_name=f"{provider.display_name} / {provider.default_model}",
+            api_key_field=provider.api_key_field,
+            env_var=provider.env_var,
+            extra_model_config=provider.extra_config,
+        )
+        data = yaml.safe_load(content)
+        model = data["models"][0]
+        assert model["name"] == "glm-4-7"
+        assert model["display_name"] == "Z.AI Coding Plan / glm-4.7"
+        assert model["model"] == "glm-4.7"
+        assert model["api_key"] == "$Z_AI_API_KEY"
+        assert model["base_url"] == "https://api.z.ai/api/coding/paas/v4"
+        assert model["request_timeout"] == 600.0
+        assert model["max_retries"] == 2
+        assert model["max_tokens"] == 8192
+        assert model["temperature"] == 0.7
+        assert model["supports_thinking"] is True
+
+    def test_z_ai_glm_5_1_config_name_is_yaml_safe(self):
+        provider = next(p for p in LLM_PROVIDERS if p.name == "z_ai")
+        content = build_minimal_config(
+            provider_use=provider.use,
+            model_name="glm-5.1",
+            display_name=f"{provider.display_name} / glm-5.1",
+            api_key_field=provider.api_key_field,
+            env_var=provider.env_var,
+            extra_model_config=provider.extra_config,
+        )
+        data = yaml.safe_load(content)
+        assert data["models"][0]["name"] == "glm-5-1"
 
     def test_web_fetch_tool_included(self):
         content = build_minimal_config(

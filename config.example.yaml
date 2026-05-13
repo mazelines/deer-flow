@@ -38,6 +38,43 @@ token_usage:
 # Configure available LLM models for the agent to use
 
 models:
+  # Example: Z.AI Coding Plan models (OpenAI-compatible)
+  # - name: glm-4-7
+  #   display_name: Z.AI Coding Plan / glm-4.7
+  #   use: langchain_openai:ChatOpenAI
+  #   model: glm-4.7
+  #   api_key: $Z_AI_API_KEY
+  #   base_url: https://api.z.ai/api/coding/paas/v4
+  #   request_timeout: 600.0
+  #   max_retries: 2
+  #   max_tokens: 8192
+  #   temperature: 0.7
+  #   supports_thinking: true
+  #
+  # - name: glm-5-1
+  #   display_name: Z.AI Coding Plan / glm-5.1
+  #   use: langchain_openai:ChatOpenAI
+  #   model: glm-5.1
+  #   api_key: $Z_AI_API_KEY
+  #   base_url: https://api.z.ai/api/coding/paas/v4
+  #   request_timeout: 600.0
+  #   max_retries: 2
+  #   max_tokens: 8192
+  #   temperature: 0.7
+  #   supports_thinking: true
+  #
+  # - name: glm-5-turbo
+  #   display_name: Z.AI Coding Plan / glm-5-turbo
+  #   use: langchain_openai:ChatOpenAI
+  #   model: glm-5-turbo
+  #   api_key: $Z_AI_API_KEY
+  #   base_url: https://api.z.ai/api/coding/paas/v4
+  #   request_timeout: 600.0
+  #   max_retries: 2
+  #   max_tokens: 8192
+  #   temperature: 0.7
+  #   supports_thinking: true
+
   # Example: Volcengine (Doubao) model
   # - name: doubao-seed-1.8
   #   display_name: Doubao-Seed-1.8

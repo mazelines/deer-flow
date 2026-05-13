@@ -43,7 +43,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 DOCKER_DIR="$REPO_ROOT/docker"
-COMPOSE_CMD=(docker compose -p deer-flow -f "$DOCKER_DIR/docker-compose.yaml")
+COMPOSE_CMD=(docker compose --env-file "$REPO_ROOT/.env" -p deer-flow -f "$DOCKER_DIR/docker-compose.yaml")
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 
@@ -170,7 +170,10 @@ if [ "$CMD" = "down" ]; then
     export DEER_FLOW_HOME="${DEER_FLOW_HOME:-$REPO_ROOT/backend/.deer-flow}"
     export DEER_FLOW_CONFIG_PATH="${DEER_FLOW_CONFIG_PATH:-$DEER_FLOW_HOME/config.yaml}"
     export DEER_FLOW_EXTENSIONS_CONFIG_PATH="${DEER_FLOW_EXTENSIONS_CONFIG_PATH:-$DEER_FLOW_HOME/extensions_config.json}"
-    export DEER_FLOW_DOCKER_SOCKET="${DEER_FLOW_DOCKER_SOCKET:-/var/run/docker.sock}"
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*) export DEER_FLOW_DOCKER_SOCKET="${DEER_FLOW_DOCKER_SOCKET:-//var/run/docker.sock}" ;;
+        *) export DEER_FLOW_DOCKER_SOCKET="${DEER_FLOW_DOCKER_SOCKET:-/var/run/docker.sock}" ;;
+    esac
     export DEER_FLOW_REPO_ROOT="${DEER_FLOW_REPO_ROOT:-$REPO_ROOT}"
     export BETTER_AUTH_SECRET="${BETTER_AUTH_SECRET:-placeholder}"
     "${COMPOSE_CMD[@]}" down
@@ -188,7 +191,10 @@ if [ "$CMD" = "build" ]; then
 
     # Docker socket is needed for compose to parse volume specs
     if [ -z "$DEER_FLOW_DOCKER_SOCKET" ]; then
-        export DEER_FLOW_DOCKER_SOCKET="/var/run/docker.sock"
+        case "$(uname -s)" in
+            MINGW*|MSYS*|CYGWIN*) export DEER_FLOW_DOCKER_SOCKET="//var/run/docker.sock" ;;
+            *) export DEER_FLOW_DOCKER_SOCKET="/var/run/docker.sock" ;;
+        esac
     fi
 
     "${COMPOSE_CMD[@]}" build
@@ -227,7 +233,10 @@ fi
 # ── DEER_FLOW_DOCKER_SOCKET ───────────────────────────────────────────────────
 
 if [ -z "$DEER_FLOW_DOCKER_SOCKET" ]; then
-    export DEER_FLOW_DOCKER_SOCKET="/var/run/docker.sock"
+    case "$(uname -s)" in
+        MINGW*|MSYS*|CYGWIN*) export DEER_FLOW_DOCKER_SOCKET="//var/run/docker.sock" ;;
+        *) export DEER_FLOW_DOCKER_SOCKET="/var/run/docker.sock" ;;
+    esac
 fi
 
 if [ "$sandbox_mode" != "local" ]; then

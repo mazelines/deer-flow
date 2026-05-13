@@ -5,6 +5,7 @@
 #   - nginx:       Reverse proxy (port 2026, configurable via PORT env var)
 #   - frontend:    Next.js production server
 #   - gateway:     FastAPI Gateway API + agent runtime
+#   - postgres:    PostgreSQL persistence backend
 #   - provisioner: (optional) Sandbox provisioner for Kubernetes mode
 #
 # Key environment variables (set via environment/.env or scripts/deploy.sh):
@@ -60,6 +61,25 @@ services:
       - deer-flow
     restart: unless-stopped
 
+  # ── Postgres: Production Persistence ────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: deer-flow-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-deerflow}
+      - POSTGRES_USER=${POSTGRES_USER:-deerflow}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - deer-flow-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-deerflow} -d ${POSTGRES_DB:-deerflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - deer-flow
+    restart: unless-stopped
+
   # ── Gateway API ────────────────────────────────────────────────────────────
   gateway:
     build:
@@ -71,7 +91,13 @@ services:
         UV_INDEX_URL: ${UV_INDEX_URL:-https://pypi.org/simple}
         UV_EXTRAS: ${UV_EXTRAS:-}
     container_name: deer-flow-gateway
-    command: sh -c "cd backend && PYTHONPATH=. uv run uvicorn app.gateway.app:app --host 0.0.0.0 --port 8001 --workers ${GATEWAY_WORKERS:-4}"
+    command: >
+      sh -c "cd backend
+      && PYTHONPATH=. uv run python -m app.gateway.preflight
+      && PYTHONPATH=. uv run uvicorn app.gateway.app:app --host 0.0.0.0 --port 8001 --workers ${GATEWAY_WORKERS:-4}"
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - ${DEER_FLOW_CONFIG_PATH}:/app/backend/config.yaml:ro
       - ${DEER_FLOW_EXTENSIONS_CONFIG_PATH}:/app/backend/extensions_config.json:ro
@@ -147,3 +173,6 @@ services:
 networks:
   deer-flow:
     driver: bridge
+
+volumes:
+  deer-flow-postgres-data:
